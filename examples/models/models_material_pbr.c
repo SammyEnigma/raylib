@@ -133,7 +133,7 @@ static Material LoadMaterialPBR(Color albedo, float metalness, float roughness)
     Material mat = LoadMaterialDefault();   // Initialize material to default
 
     // Load PBR shader (requires several maps)
-    mat.shader = LoadShader(TextFormat("resources/shaders/glsl%i/pbr.vs", GLSL_VERSION), 
+    mat.shader = LoadShader(TextFormat("resources/shaders/glsl%i/pbr.vs", GLSL_VERSION),
                             TextFormat("resources/shaders/glsl%i/pbr.fs", GLSL_VERSION));
 
     // Get required locations points for PBR material
@@ -160,14 +160,14 @@ static Material LoadMaterialPBR(Color albedo, float metalness, float roughness)
     mat.maps[MATERIAL_MAP_METALNESS].texture = LoadTexture("resources/pbr/trooper_metalness.png");
     mat.maps[MATERIAL_MAP_ROUGHNESS].texture = LoadTexture("resources/pbr/trooper_roughness.png");
     mat.maps[MATERIAL_MAP_OCCLUSION].texture = LoadTexture("resources/pbr/trooper_ao.png");
-    
+
     // Set textures filtering for better quality
     SetTextureFilter(mat.maps[MATERIAL_MAP_ALBEDO].texture, FILTER_BILINEAR);
     SetTextureFilter(mat.maps[MATERIAL_MAP_NORMAL].texture, FILTER_BILINEAR);
     SetTextureFilter(mat.maps[MATERIAL_MAP_METALNESS].texture, FILTER_BILINEAR);
     SetTextureFilter(mat.maps[MATERIAL_MAP_ROUGHNESS].texture, FILTER_BILINEAR);
     SetTextureFilter(mat.maps[MATERIAL_MAP_OCCLUSION].texture, FILTER_BILINEAR);
-    
+
     // Enable sample usage in shader for assigned textures
     SetShaderValue(mat.shader, GetShaderLocation(mat.shader, "albedo.useSampler"), (int[1]){ 1 }, SHADER_UNIFORM_INT);
     SetShaderValue(mat.shader, GetShaderLocation(mat.shader, "normals.useSampler"), (int[1]){ 1 }, SHADER_UNIFORM_INT);
@@ -186,13 +186,13 @@ static Material LoadMaterialPBR(Color albedo, float metalness, float roughness)
     mat.maps[MATERIAL_MAP_OCCLUSION].value = 1.0f;
     mat.maps[MATERIAL_MAP_EMISSION].value = 0.5f;
     mat.maps[MATERIAL_MAP_HEIGHT].value = 0.5f;
-    
+
     // Generate cubemap from panorama texture
     //--------------------------------------------------------------------------------------------------------
     Texture2D panorama = LoadTexture("resources/dresden_square_2k.hdr");
-    
+
     // Load equirectangular to cubemap shader
-    Shader shdrCubemap = LoadShader(TextFormat("resources/shaders/glsl%i/pbr.vs", GLSL_VERSION), 
+    Shader shdrCubemap = LoadShader(TextFormat("resources/shaders/glsl%i/pbr.vs", GLSL_VERSION),
                                     TextFormat("resources/shaders/glsl%i/pbr.fs", GLSL_VERSION));
 
     SetShaderValue(shdrCubemap, GetShaderLocation(shdrCubemap, "equirectangularMap"), (int[1]){ 0 }, SHADER_UNIFORM_INT);
@@ -200,33 +200,33 @@ static Material LoadMaterialPBR(Color albedo, float metalness, float roughness)
     UnloadTexture(panorama);
     UnloadShader(shdrCubemap);
     //--------------------------------------------------------------------------------------------------------
-    
+
     // Generate irradiance map from cubemap texture
     //--------------------------------------------------------------------------------------------------------
     // Load irradiance (GI) calculation shader
-    Shader shdrIrradiance = LoadShader(TextFormat("resources/shaders/glsl%i/skybox.vs", GLSL_VERSION), 
+    Shader shdrIrradiance = LoadShader(TextFormat("resources/shaders/glsl%i/skybox.vs", GLSL_VERSION),
                                        TextFormat("resources/shaders/glsl%i/irradiance.fs", GLSL_VERSION));
 
     SetShaderValue(shdrIrradiance, GetShaderLocation(shdrIrradiance, "environmentMap"), (int[1]){ 0 }, SHADER_UNIFORM_INT);
     mat.maps[MATERIAL_MAP_IRRADIANCE].texture = GenTextureIrradiance(shdrIrradiance, cubemap, IRRADIANCE_SIZE);
     UnloadShader(shdrIrradiance);
     //--------------------------------------------------------------------------------------------------------
-    
+
     // Generate prefilter map from cubemap texture
     //--------------------------------------------------------------------------------------------------------
     // Load reflection prefilter calculation shader
-    Shader shdrPrefilter = LoadShader(TextFormat("resources/shaders/glsl%i/skybox.vs", GLSL_VERSION), 
+    Shader shdrPrefilter = LoadShader(TextFormat("resources/shaders/glsl%i/skybox.vs", GLSL_VERSION),
                                       TextFormat("resources/shaders/glsl%i/prefilter.fs", GLSL_VERSION));
-                                       
+
     SetShaderValue(shdrPrefilter, GetShaderLocation(shdrPrefilter, "environmentMap"), (int[1]){ 0 }, SHADER_UNIFORM_INT);
     mat.maps[MATERIAL_MAP_PREFILTER].texture = GenTexturePrefilter(shdrPrefilter, cubemap, PREFILTERED_SIZE);
     UnloadTexture(cubemap);
     UnloadShader(shdrPrefilter);
     //--------------------------------------------------------------------------------------------------------
-    
+
     // Generate BRDF (bidirectional reflectance distribution function) texture (using shader)
     //--------------------------------------------------------------------------------------------------------
-    Shader shdrBRDF = LoadShader(TextFormat("resources/shaders/glsl%i/brdf.vs", GLSL_VERSION), 
+    Shader shdrBRDF = LoadShader(TextFormat("resources/shaders/glsl%i/brdf.vs", GLSL_VERSION),
                                  TextFormat("resources/shaders/glsl%i/brdf.fs", GLSL_VERSION));
 
     mat.maps[MATERIAL_MAP_BRDG].texture = GenTextureBRDF(shdrBRDF, BRDF_SIZE);
@@ -279,17 +279,31 @@ static TextureCubemap GenTextureCubemap(Shader shader, Texture2D panorama, int s
 
     rlViewport(0, 0, size, size);   // Set viewport to current fbo dimensions
 
+    // Activate and enable texture for drawing to cubemap faces
+    rlActiveTextureSlot(0);
+    rlEnableTexture(panorama.id);
+
     for (int i = 0; i < 6; i++)
     {
+        // Set the view matrix for the current cube face
         rlSetUniformMatrix(shader.locs[SHADER_LOC_MATRIX_VIEW], fboViews[i]);
+        
+        // Select the current cubemap face attachment for the fbo
+        // WARNING: This function by default enables->attach->disables fbo!!!
         rlFramebufferAttach(fbo, cubemap.id, RL_ATTACHMENT_COLOR_CHANNEL0, RL_ATTACHMENT_CUBEMAP_POSITIVE_X + i, 0);
-
         rlEnableFramebuffer(fbo);
-        rlSetTexture(panorama.id);   // WARNING: It must be called after enabling current framebuffer if using internal batch system!
 
+        // Load and draw a cube, it uses the current enabled texture
         rlClearScreenBuffers();
-        DrawCubeV(Vector3Zero(), Vector3One(), WHITE);
-        rlDrawRenderBatchActive();
+        rlLoadDrawCube();
+        
+        // ALTERNATIVE: Try to use internal batch system to draw the cube instead of rlLoadDrawCube
+        // for some reason this method does not work, maybe due to cube triangles definition? normals pointing out?
+        // TODO: Investigate this issue...
+        //rlSetTexture(panorama.id); // WARNING: It must be called after enabling current framebuffer if using internal batch system!
+        //rlClearScreenBuffers();
+        //DrawCubeV(Vector3Zero(), Vector3One(), WHITE);
+        //rlDrawRenderBatchActive();
     }
     //------------------------------------------------------------------------------------------
 
@@ -453,7 +467,7 @@ static TextureCubemap GenTexturePrefilter(Shader shader, TextureCubemap cubemap,
         {
             rlSetUniformMatrix(shader.locs[SHADER_LOC_MATRIX_VIEW], fboViews[i]);
             rlFramebufferAttach(fbo, prefilter.id, RL_ATTACHMENT_COLOR_CHANNEL0, RL_ATTACHMENT_CUBEMAP_POSITIVE_X + i, mip);
-            
+
             rlClearScreenBuffers();
             rlLoadDrawCube();
         }

@@ -1,10 +1,10 @@
 changelog
 ---------
 
-Current Release:    raylib 3.7.0 (xx April 2021)
+Current Release:    raylib 3.7.0 (26 April 2021)
 
 -------------------------------------------------------------------------
-Release:     raylib 3.7 (xx April 2021)
+Release:     raylib 3.7 (26 April 2021)
 -------------------------------------------------------------------------
 KEY CHANGES:
  - [rlgl] REDESIGNED: Greater abstraction level, some functionality moved to core module
@@ -66,7 +66,6 @@ Detailed changes:
 [models] ADDED: DrawMesh()
 [models] ADDED: DrawMeshInstanced()
 [models] ADDED: UnloadModelAnimations() (#1648) by @object71
-[models] ADDED: GenMeshDefault() (#1556)
 [models] REMOVED: DrawGizmo()
 [models] REMOVED: LoadMeshes()
 [models] REMOVED: MeshNormalsSmooth()
@@ -86,6 +85,7 @@ Detailed changes:
 [examples] REDESIGNED: models_yaw_pitch_roll
 [build] ADDED: Config flag: SUPPORT_STANDARD_FILEIO
 [build] ADDED: Config flag: SUPPORT_WINMM_HIGHRES_TIMER (#1641)
+[build] ADDED: Config flag: SUPPORT_GL_DETAILS_INFO
 [build] ADDED: Examples projects to VS2019 solution
 [build] REVIEWED: Makefile to support PLATFORM_RPI (#1580)
 [build] REVIEWED: Multiple typecast warnings by @JeffM2501
