@@ -525,7 +525,6 @@ CORE = \
     core/core_input_mouse_wheel \
     core/core_input_multitouch \
     core/core_input_virtual_controls \
-    core/core_loading_thread \
     core/core_random_sequence \
     core/core_random_values \
     core/core_scissor_test \
@@ -563,7 +562,6 @@ TEXTURES = \
     textures/textures_background_scrolling \
     textures/textures_blend_modes \
     textures/textures_bunnymark \
-    textures/textures_draw_tiled \
     textures/textures_fog_of_war \
     textures/textures_gif_player \
     textures/textures_image_channel \
@@ -578,27 +576,28 @@ TEXTURES = \
     textures/textures_mouse_painting \
     textures/textures_npatch_drawing \
     textures/textures_particles_blending \
-    textures/textures_polygon \
+    textures/textures_polygon_drawing \
     textures/textures_raw_data \
     textures/textures_sprite_anim \
     textures/textures_sprite_button \
     textures/textures_sprite_explosion \
     textures/textures_srcrec_dstrec \
     textures/textures_textured_curve \
+    textures/textures_tiled_drawing \
     textures/textures_to_image
 
 TEXT = \
+    text/text_3d_drawing \
     text/text_codepoints_loading \
-    text/text_draw_3d \
     text/text_font_filters \
     text/text_font_loading \
     text/text_font_sdf \
     text/text_font_spritefont \
     text/text_format_text \
     text/text_input_box \
-    text/text_raylib_fonts \
     text/text_rectangle_bounds \
-    text/text_unicode \
+    text/text_sprite_fonts \
+    text/text_unicode_emojis \
     text/text_unicode_ranges \
     text/text_writing_anim
 
@@ -622,7 +621,7 @@ MODELS = \
     models/models_orthographic_projection \
     models/models_point_rendering \
     models/models_rlgl_solar_system \
-    models/models_skybox \
+    models/models_skybox_rendering \
     models/models_tesseract_view \
     models/models_waving_cubes \
     models/models_yaw_pitch_roll
