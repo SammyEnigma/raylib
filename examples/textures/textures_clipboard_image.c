@@ -4,26 +4,25 @@
 *
 *   Example complexity rating: [★☆☆☆] 1/4
 *
-*   Example originally created with raylib 5.5, last time updated with raylib 5.6
+*   Example originally created with raylib 6.0, last time updated with raylib 6.0
 *
 *   Example contributed by Maicon Santana (@maiconpintoabreu) and reviewed by Ramon Santamaria (@raysan5)
 *
 *   Example licensed under an unmodified zlib/libpng license, which is an OSI-certified,
 *   BSD-like license that allows static linking with closed source software
 *
-*   Copyright (c) 2026-2026 Maicon Santana (@maiconpintoabreu)
+*   Copyright (c) 2026 Maicon Santana (@maiconpintoabreu)
 *
 ********************************************************************************************/
 
-#define RCORE_PLATFORM_RGFW
 #include "raylib.h"
 
-#define MAX_IAMGE_COLLECTION_AMOUNT 1000
+#define MAX_TEXTURE_COLLECTION  20
 
-typedef struct ImageCollection {
+typedef struct TextureCollection {
     Texture2D texture;
     Vector2 position;
-} ImageCollection;
+} TextureCollection;
 
 //------------------------------------------------------------------------------------
 // Program main entry point
@@ -37,7 +36,7 @@ int main(void)
 
     InitWindow(screenWidth, screenHeight, "raylib [textures] example - clipboard_image");
 
-    ImageCollection collection[MAX_IAMGE_COLLECTION_AMOUNT] = {0};
+    TextureCollection collection[MAX_TEXTURE_COLLECTION] = { 0 };
     int currentCollectionIndex = 0;
 
     SetTargetFPS(60);
@@ -48,26 +47,19 @@ int main(void)
     {
         // Update
         //----------------------------------------------------------------------------------
-        // TODO: Update variables / Implement example logic at this point
-        //----------------------------------------------------------------------------------
-
-        if(IsKeyPressed(KEY_R))
+        if (IsKeyPressed(KEY_R))    // Reset image collection
         {
+            // Unload textures to avoid memory leaks
+            for (int i = 0; i < MAX_TEXTURE_COLLECTION; i++) UnloadTexture(collection[i].texture);
+            
             currentCollectionIndex = 0;
-
-            // Unload Texture to avoid Memory leak
-            for (int i=0;i<MAX_IAMGE_COLLECTION_AMOUNT;i++)
-            {
-                if (IsTextureValid(collection[i].texture))
-                {
-                    UnloadTexture(collection[i].texture);
-                }
-            }
         }
 
-        if (currentCollectionIndex < MAX_IAMGE_COLLECTION_AMOUNT && IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_V))
+        if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_V) &&
+            (currentCollectionIndex < MAX_TEXTURE_COLLECTION))
         {
             Image image = GetClipboardImage();
+            
             if (IsImageValid(image))
             {
                 collection[currentCollectionIndex].texture = LoadTextureFromImage(image);
@@ -75,28 +67,25 @@ int main(void)
                 currentCollectionIndex++;
                 UnloadImage(image);
             }
-            else
-            {
-                TraceLog(LOG_INFO, "Nothing to paste here");
-            }
+            else TraceLog(LOG_INFO, "IMAGE: Could not retrieve image from clipboard");
         }
+        //----------------------------------------------------------------------------------
 
         // Draw
         //----------------------------------------------------------------------------------
         BeginDrawing();
 
             ClearBackground(RAYWHITE);
-            for (int i=0;i<currentCollectionIndex;i++)
+            
+            for (int i = 0; i < currentCollectionIndex; i++)
             {
                 if (IsTextureValid(collection[i].texture))
                 {
-                    DrawTexturePro(
-                        collection[i].texture, 
+                    DrawTexturePro(collection[i].texture, 
                         (Rectangle){0,0,collection[i].texture.width, collection[i].texture.height}, 
                         (Rectangle){collection[i].position.x,collection[i].position.y,collection[i].texture.width, collection[i].texture.height},
                         (Vector2){collection[i].texture.width*0.5f, collection[i].texture.height*0.5f}, 
-                        0.0f, 
-                        WHITE);
+                        0.0f, WHITE);
                 }
             }
 
@@ -109,13 +98,9 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-
-    for (int i=0;i<MAX_IAMGE_COLLECTION_AMOUNT;i++)
+    for (int i = 0; i < MAX_TEXTURE_COLLECTION;i ++)
     {
-        if (IsTextureValid(collection[i].texture))
-        {
-            UnloadTexture(collection[i].texture);
-        }
+        UnloadTexture(collection[i].texture);
     }
 
     CloseWindow();        // Close window and OpenGL context
