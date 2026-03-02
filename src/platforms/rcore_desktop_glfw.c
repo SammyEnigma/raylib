@@ -1067,8 +1067,8 @@ Image GetClipboardImage(void)
 
 #elif defined(__linux__) && defined(_GLFW_X11)
 
-    // Implementation based on https://github.com/ColleagueRiley/Clipboard-Copy-Paste/blob/main/x11.c
-    Display* dpy = XOpenDisplay(NULL);
+    // REF: https://github.com/ColleagueRiley/Clipboard-Copy-Paste/blob/main/x11.c
+    Display *dpy = XOpenDisplay(NULL);
     if (!dpy) return image;
 
     Window root = DefaultRootWindow(dpy);
@@ -1090,19 +1090,21 @@ Image GetClipboardImage(void)
     XConvertSelection(dpy, clipboard, targetType, property, win, CurrentTime);
 
     // Wait for the SelectionNotify event
-    XEvent ev;
+    XEvent ev = { 0 };
     XNextEvent(dpy, &ev);
 
-    Atom actualType;
-    int actualFormat;
-    unsigned long nitems, bytesAfter;
-    unsigned char* data = NULL;
+    Atom actualType = { 0 };
+    int actualFormat = 0;
+    unsigned long nitems = 0;
+    unsigned long bytesAfter = 0;
+    unsigned char *data = NULL;
 
     // Read the data from our ghost window's property
     XGetWindowProperty(dpy, win, property, 0, ~0L, False, AnyPropertyType,
-                        &actualType, &actualFormat, &nitems, &bytesAfter, &data);
+        &actualType, &actualFormat, &nitems, &bytesAfter, &data);
 
-    if (data != NULL) {
+    if (data != NULL)
+    {
         image = LoadImageFromMemory(".png", data, (int)nitems);
         XFree(data);
     }
